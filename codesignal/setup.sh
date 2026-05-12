@@ -19,8 +19,23 @@
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# Detect the repo root. If this script is being executed as a file, use its
+# location's parent. If it's being piped/pasted into bash (no $0 path), look
+# upward from the current working directory for the marker files.
+if [ -f "${BASH_SOURCE[0]:-}" ]; then
+  ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+else
+  ROOT="$PWD"
+  while [ "$ROOT" != "/" ] && [ ! -d "$ROOT/backend" -o ! -d "$ROOT/frontend" ]; do
+    ROOT="$(dirname "$ROOT")"
+  done
+  if [ "$ROOT" = "/" ]; then
+    echo "✗ Couldn't locate repo root (expected backend/ and frontend/ as siblings)."
+    exit 1
+  fi
+fi
 cd "$ROOT"
+echo "→ Working from $ROOT"
 
 echo "→ Installing uv (Python package manager)..."
 if ! command -v uv >/dev/null 2>&1; then
