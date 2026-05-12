@@ -5,9 +5,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    // Vite 7 blocks requests from non-allowlisted hosts. The leading "." is
-    // a subdomain wildcard so any preview URL CodeSignal hands out works.
-    allowedHosts: [".codesignalusercontent.com"],
+    // Vite 7 blocks requests from non-allowlisted hosts. Leading "." is a
+    // subdomain wildcard. github.dev covers GitHub Codespaces forwarded ports;
+    // codesignalusercontent.com covers the CodeSignal interview preview.
+    allowedHosts: [".app.github.dev", ".codesignalusercontent.com"],
     proxy: {
       "/api": {
         target: "http://localhost:8000",
