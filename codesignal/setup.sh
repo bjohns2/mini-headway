@@ -19,21 +19,43 @@
 
 set -euo pipefail
 
-# Detect the repo root. If this script is being executed as a file, use its
-# location's parent. If it's being piped/pasted into bash (no $0 path), look
-# upward from the current working directory for the marker files.
-if [ -f "${BASH_SOURCE[0]:-}" ]; then
-  ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-else
-  ROOT="$PWD"
-  while [ "$ROOT" != "/" ] && [ ! -d "$ROOT/backend" -o ! -d "$ROOT/frontend" ]; do
-    ROOT="$(dirname "$ROOT")"
+# Locate the repo root — the directory that contains both `backend/` and
+# `frontend/`. CodeSignal sometimes nests uploaded files under a wrapper
+# like `/usercode/FILESYSTEM/...`, so search both downward from the current
+# directory and upward.
+has_repo() {
+  [ -d "$1/backend" ] && [ -d "$1/frontend" ]
+}
+
+find_repo_root() {
+  # 1. Current directory.
+  if has_repo "$PWD"; then echo "$PWD"; return 0; fi
+
+  # 2. Search downward from PWD (depth-limited so it stays quick).
+  local found
+  found="$(find "$PWD" -maxdepth 4 -type d -name backend 2>/dev/null \
+    | while IFS= read -r d; do
+        local parent
+        parent="$(dirname "$d")"
+        if has_repo "$parent"; then echo "$parent"; break; fi
+      done | head -n 1)"
+  if [ -n "$found" ]; then echo "$found"; return 0; fi
+
+  # 3. Walk upward from PWD.
+  local cur="$PWD"
+  while [ "$cur" != "/" ]; do
+    if has_repo "$cur"; then echo "$cur"; return 0; fi
+    cur="$(dirname "$cur")"
   done
-  if [ "$ROOT" = "/" ]; then
-    echo "✗ Couldn't locate repo root (expected backend/ and frontend/ as siblings)."
-    exit 1
-  fi
-fi
+
+  return 1
+}
+
+ROOT="$(find_repo_root)" || {
+  echo "✗ Couldn't locate a directory containing both backend/ and frontend/."
+  echo "  PWD = $PWD"
+  exit 1
+}
 cd "$ROOT"
 echo "→ Working from $ROOT"
 
