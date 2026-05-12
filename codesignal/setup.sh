@@ -2,32 +2,34 @@
 #
 # Bootstrap script for a CodeSignal Interview session.
 #
-# Assumes the repo files have already been pre-loaded into the CodeSignal
-# container (i.e. you uploaded the project when creating the Advanced
-# Assessment Question — no `git clone` needed).
+# Two-mode boot:
+#   • If the repo's source is already present in or near $PWD (i.e. it was
+#     pre-uploaded into the CodeSignal starting filesystem), use it in place.
+#   • Otherwise clone the source from GitHub. This is the default path —
+#     it keeps the starting filesystem nearly empty so CodeSignal's 1 MB
+#     filesystem cap isn't a problem.
 #
-# What this does:
+# After locating/cloning the source, this script:
 #   1. Installs uv (Python package manager) if missing.
 #   2. Installs the backend's Python deps + Python 3.11 via uv.
 #   3. Installs the frontend's Node deps via npm.
 #   4. Seeds the SQLite database with the interview fixture.
-#   5. Starts the backend (uvicorn on :8000) and frontend (vite on :3000)
-#      in the background so the candidate's preview panel works on session start.
+#   5. Starts the backend (uvicorn on :8000) and the frontend (vite on :3000)
+#      in the background so the candidate's preview panel works on session
+#      start.
 #
 # The candidate sees a ready terminal at the repo root. They can poke around
 # with `ls`, read README.md, and start clicking in the preview panel.
 
 set -euo pipefail
 
-# Locate the repo root — the directory that contains both `backend/` and
-# `frontend/`. CodeSignal sometimes nests uploaded files under a wrapper
-# like `/usercode/FILESYSTEM/...`, so search both downward from the current
-# directory and upward.
+REPO_URL="${MINI_HEADWAY_REPO_URL:-https://github.com/bjohns2/mini-headway.git}"
+
 has_repo() {
   [ -d "$1/backend" ] && [ -d "$1/frontend" ]
 }
 
-find_repo_root() {
+find_existing_repo() {
   # 1. Current directory.
   if has_repo "$PWD"; then echo "$PWD"; return 0; fi
 
@@ -51,13 +53,15 @@ find_repo_root() {
   return 1
 }
 
-ROOT="$(find_repo_root)" || {
-  echo "✗ Couldn't locate a directory containing both backend/ and frontend/."
-  echo "  PWD = $PWD"
-  exit 1
-}
+if ROOT="$(find_existing_repo)"; then
+  echo "→ Found existing source at $ROOT"
+else
+  CLONE_DIR="${PWD}/mini-headway"
+  echo "→ No source on disk. Cloning $REPO_URL into $CLONE_DIR..."
+  git clone --depth 1 "$REPO_URL" "$CLONE_DIR"
+  ROOT="$CLONE_DIR"
+fi
 cd "$ROOT"
-echo "→ Working from $ROOT"
 
 echo "→ Installing uv (Python package manager)..."
 if ! command -v uv >/dev/null 2>&1; then
@@ -92,6 +96,7 @@ cd "$ROOT"
 echo ""
 echo "✓ Setup complete."
 echo ""
+echo "  Repo:     $ROOT"
 echo "  Backend:  http://localhost:8000 (logs: /tmp/backend.log)"
 echo "  Frontend: http://localhost:3000 (logs: /tmp/frontend.log)"
 echo ""
