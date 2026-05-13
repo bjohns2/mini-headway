@@ -18,3 +18,8 @@ class AppointmentRead(BaseModel):
 class AppointmentWithPatient(AppointmentRead):
     patient_name: str
     provider_name: str
+
+
+class AppointmentCreate(BaseModel):
+    patient_id: int
+    starts_at: datetime

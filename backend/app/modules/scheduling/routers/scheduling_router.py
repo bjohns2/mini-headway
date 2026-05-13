@@ -12,9 +12,11 @@ from app.modules.provider.services import session_confirmability_service
 from app.modules.scheduling.models.appointment import AppointmentStatus
 from app.modules.scheduling.repositories import appointment_repository
 from app.modules.scheduling.schemas.appointment import (
+    AppointmentCreate,
     AppointmentRead,
     AppointmentWithPatient,
 )
+from app.modules.scheduling.services import appointment_scheduling_service
 
 router = APIRouter(tags=["scheduling"])
 
@@ -41,6 +43,21 @@ def list_appointments(
 ) -> list[AppointmentWithPatient]:
     appointments = appointment_repository.list_for_provider_on(db, provider_id, day)
     return [_attach_names(db, a) for a in appointments]
+
+
+@router.post("/appointments", response_model=AppointmentWithPatient, status_code=201)
+def create_appointment(
+    body: AppointmentCreate,
+    db: Session = Depends(get_db),
+    provider_id: int = Depends(current_provider_id),
+) -> AppointmentWithPatient:
+    appointment = appointment_scheduling_service.schedule_appointment(
+        db,
+        provider_id=provider_id,
+        patient_id=body.patient_id,
+        starts_at=body.starts_at,
+    )
+    return _attach_names(db, appointment)
 
 
 @router.get("/appointments/{appointment_id}", response_model=AppointmentWithPatient)

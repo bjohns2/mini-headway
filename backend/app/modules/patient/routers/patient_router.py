@@ -10,6 +10,13 @@ from app.modules.patient.services import patient_readiness_service
 router = APIRouter(tags=["patient"])
 
 
+@router.get("/patients", response_model=list[PatientRead])
+def list_patients(db: Session = Depends(get_db)) -> list[PatientRead]:
+    return [
+        PatientRead.model_validate(p) for p in patient_repository.list_all(db)
+    ]
+
+
 @router.get("/patients/{patient_id}", response_model=PatientRead)
 def get_patient(patient_id: int, db: Session = Depends(get_db)) -> PatientRead:
     patient = patient_repository.get(db, patient_id)

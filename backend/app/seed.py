@@ -128,6 +128,66 @@ def _seed(db: Session) -> None:
         )
     )
 
+    yesterday = today - timedelta(days=1)
+    two_days_ago = today - timedelta(days=2)
+
+    # Day-before-yesterday: a normal day of confirmed sessions for Dr. Adams.
+    db.add_all(
+        [
+            Appointment(
+                patient_id=1,
+                provider_id=1,
+                starts_at=datetime.combine(two_days_ago, time(9, 0)),
+                status=AppointmentStatus.CONFIRMED,
+            ),
+            Appointment(
+                patient_id=2,
+                provider_id=1,
+                starts_at=datetime.combine(two_days_ago, time(10, 30)),
+                status=AppointmentStatus.CONFIRMED,
+            ),
+            Appointment(
+                patient_id=4,
+                provider_id=1,
+                starts_at=datetime.combine(two_days_ago, time(14, 0)),
+                status=AppointmentStatus.CONFIRMED,
+            ),
+        ]
+    )
+
+    # Yesterday: mostly confirmed, plus the first sign of trouble with Maya —
+    # her appointment was scheduled but never confirmed before the day rolled
+    # over. (The provider would have noticed Confirm errored.) Also one
+    # cancellation, for realism.
+    db.add_all(
+        [
+            Appointment(
+                patient_id=1,
+                provider_id=1,
+                starts_at=datetime.combine(yesterday, time(9, 0)),
+                status=AppointmentStatus.CONFIRMED,
+            ),
+            Appointment(
+                patient_id=3,  # Maya — was scheduled, never made it to CONFIRMED
+                provider_id=1,
+                starts_at=datetime.combine(yesterday, time(11, 0)),
+                status=AppointmentStatus.SCHEDULED,
+            ),
+            Appointment(
+                patient_id=5,
+                provider_id=1,
+                starts_at=datetime.combine(yesterday, time(13, 30)),
+                status=AppointmentStatus.CANCELLED,
+            ),
+            Appointment(
+                patient_id=6,
+                provider_id=1,
+                starts_at=datetime.combine(yesterday, time(15, 0)),
+                status=AppointmentStatus.CONFIRMED,
+            ),
+        ]
+    )
+
     # Today's appointments for Dr. Adams (provider_id=1).
     db.add_all(
         [
@@ -144,7 +204,7 @@ def _seed(db: Session) -> None:
                 status=AppointmentStatus.SCHEDULED,
             ),
             Appointment(
-                patient_id=3,  # Maya — the bug case
+                patient_id=3,  # Maya — the bug case for the README brief
                 provider_id=1,
                 starts_at=datetime.combine(today, time(14, 0)),
                 status=AppointmentStatus.SCHEDULED,

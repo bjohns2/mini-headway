@@ -38,8 +38,21 @@ export class ApiError extends Error {
   }
 }
 
-export function listAppointments(): Promise<AppointmentWithPatient[]> {
-  return request("/api/appointments");
+export function listAppointments(
+  day?: string,
+): Promise<AppointmentWithPatient[]> {
+  const qs = day ? `?day=${encodeURIComponent(day)}` : "";
+  return request(`/api/appointments${qs}`);
+}
+
+export function createAppointment(body: {
+  patient_id: number;
+  starts_at: string;
+}): Promise<AppointmentWithPatient> {
+  return request("/api/appointments", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
 }
 
 export function getAppointment(id: number): Promise<AppointmentWithPatient> {
@@ -54,6 +67,10 @@ export function confirmAppointment(
   appointmentId: number,
 ): Promise<AppointmentWithPatient> {
   return request(`/api/appointments/${appointmentId}/confirm`, { method: "POST" });
+}
+
+export function listPatients(): Promise<Patient[]> {
+  return request("/api/patients");
 }
 
 export function getPatient(id: number): Promise<Patient> {

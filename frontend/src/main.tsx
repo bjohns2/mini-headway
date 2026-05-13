@@ -6,6 +6,7 @@ import App from "./App";
 import DayView from "./pages/DayView";
 import AppointmentDetail from "./pages/AppointmentDetail";
 import PatientDetail from "./pages/PatientDetail";
+import SchedulePage from "./pages/SchedulePage";
 import "./index.css";
 
 const router = createBrowserRouter([
@@ -16,6 +17,7 @@ const router = createBrowserRouter([
       { index: true, element: <DayView /> },
       { path: "appointments/:id", element: <AppointmentDetail /> },
       { path: "patients/:id", element: <PatientDetail /> },
+      { path: "schedule", element: <SchedulePage /> },
     ],
   },
 ]);

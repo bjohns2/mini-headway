@@ -3,7 +3,7 @@
 A small clone of how a patient/provider/insurance/scheduling system can fit together. Two layers:
 
 - **Backend** — FastAPI + SQLAlchemy + SQLite, organized into four modules: `patient`, `provider`, `insurance`, `scheduling`.
-- **Frontend** — Vite + React + Tailwind, three pages: day view, appointment detail, patient detail.
+- **Frontend** — Vite + React + Tailwind. Provider sees their day, can navigate prev/next day, can schedule new appointments (gated on readiness), and confirm scheduled sessions (gated on confirmability).
 
 ## Setup
 
@@ -27,9 +27,9 @@ Open <http://localhost:5173> to see the app.
 
 You're picking up a bug report from a Headway provider, Dr. Adams.
 
-> "My 2pm with Maya Patel today is showing 'Ready ✓' in my day view and on the appointment page, but when I click **Confirm Session** it errors out with an insurance verification problem. Can you look into this?"
+> "Something's off with **Maya Patel**. The day view says she's 'Ready ✓', I can schedule her without any complaint, but every appointment I book with her fails to confirm with the same insurance error. I checked yesterday's calendar and her appointment from yesterday never got confirmed either. What's going on?"
 
-**Step 1 — Reproduce.** Open the app, find Maya's appointment in the day view, click in, hit Confirm. You should see the contradiction.
+**Step 1 — Reproduce.** Open the app, find Maya in today's day view, click in, hit Confirm. Try also using **+ Schedule appointment** to book a new session with Maya — note what happens. Check yesterday too.
 
 **Step 2 — Investigate.** Use your AI tools however you'd normally use them. The bug is real and the fix isn't a one-liner.
 
@@ -57,7 +57,7 @@ backend/
 frontend/
 ├── src/
 │   ├── api/                # Typed fetch client
-│   ├── pages/              # DayView, AppointmentDetail, PatientDetail
+│   ├── pages/              # DayView, AppointmentDetail, PatientDetail, SchedulePage
 │   └── components/         # ReadyBadge, BlockerList, ConfirmButton
 ```
 

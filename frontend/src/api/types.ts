@@ -55,3 +55,10 @@ export interface ConfirmFailure {
     blockers: UnconfirmableBlocker[];
   };
 }
+
+export interface ScheduleFailure {
+  detail: {
+    message: string;
+    issues: ReadinessIssue[];
+  };
+}
